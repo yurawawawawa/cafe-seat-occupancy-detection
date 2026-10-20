@@ -1,4 +1,4 @@
-# ☕ Café Seat Occupancy Detection
+# Café Seat Occupancy Detection
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/)
 [![YOLO11](https://img.shields.io/badge/YOLO11-Ultralytics-00FFFF.svg)](https://docs.ultralytics.com/)
@@ -6,7 +6,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-Deep%20Learning-EE4C2C.svg)](https://pytorch.org/)
 [![Status](https://img.shields.io/badge/Status-Learning%20%2F%20WIP-orange.svg)]()
 
-> **Real-time café seat occupancy & availability monitoring system** using CCTV footage, YOLO11 person detection, custom polygon seat mapping, and temporal smoothing.
+> Real-time café seat occupancy and availability monitoring system using CCTV footage, YOLO11 person detection, custom polygon seat mapping, and temporal smoothing.
 
 ---
 
@@ -14,18 +14,18 @@
 
 ---
 
-## 📌 Catatan & Disclaimer (Project Pembelajaran)
+## Catatan & Disclaimer (Project Pembelajaran)
 
 > *"Projek ini dibuat sebagai sarana eksplorasi dan pembelajaran Computer Vision & Deep Learning. Sistem ini masih jauh dari sempurna dan masih dalam tahap pengembangan aktif (Work in Progress).*  
 > *Masih terdapat beberapa edge-cases (misal: oklusi antar pengunjung, kursi yang digeser, atau sudut pandang kamera ekstrem) yang terus dipelajari untuk ditingkatkan ke depannya. Masukan, saran, dan diskusi sangat terbuka!"*
 
 ---
 
-## 💡 Latar Belakang (Overview)
+## Latar Belakang (Overview)
 
 Mengetahui ketersediaan kursi di kafe atau restoran secara *real-time* biasanya memerlukan sensor fisik (IoT) pada setiap bangku yang mahal dan rumit perawatannya. 
 
-Proyek ini memanfaatkan **kamera CCTV yang sudah ada** dengan pendekatan Computer Vision berbasis software:
+Proyek ini memanfaatkan kamera CCTV yang sudah ada dengan pendekatan Computer Vision berbasis software:
 1. Mengidentifikasi posisi pengunjung menggunakan model **YOLO11 Nano**.
 2. Memetakan area kursi tetap (*fixed seats*) secara interaktif menggunakan poligon.
 3. Menghubungkan setiap orang ke kursi terdekat dengan skor bobot geometris (*person-to-seat association*).
@@ -33,24 +33,24 @@ Proyek ini memanfaatkan **kamera CCTV yang sudah ada** dengan pendekatan Compute
 
 ---
 
-## ✨ Fitur Utama
+## Fitur Utama
 
-- 🔍 **Deteksi Orang Real-Time:** Menggunakan YOLO11n yang ringan dan cepat untuk deteksi kelas `person` (COCO class 0).
-- 📐 **Interactive Seat Mapping Tool (`map_seats.py`):** Antarmuka visual untuk menandai poligon kursi secara manual pada frame CCTV, disimpan ke format `seats.json`.
-- 🎯 **Smart Association Algorithm (`occupancy.py`):**
+- **Deteksi Orang Real-Time:** Menggunakan YOLO11n yang ringan dan cepat untuk deteksi kelas `person` (COCO class 0).
+- **Interactive Seat Mapping Tool (`map_seats.py`):** Antarmuka visual untuk menandai poligon kursi secara manual pada frame CCTV, disimpan ke format `seats.json`.
+- **Smart Association Algorithm (`occupancy.py`):**
   - Menggunakan titik referensi tubuh bagian bawah / pinggang (*lower-body reference*, ~65% tinggi bbox), bukan sekadar titik tengah atau kaki.
   - Perhitungan multi-faktor: *point-in-polygon containment*, jarak ke centroid/anchor, serta confidence model.
   - Penugasan 1-ke-1 (*one-to-one matching*) untuk mencegah satu orang menduduki dua kursi sekaligus.
-- ⏳ **Temporal Smoothing & State Memory:**
+- **Temporal Smoothing & State Memory:**
   - Menggunakan *rolling deque history* (default 8 frame) untuk memfilter fluktuasi deteksi sesaat (*false negative*).
   - Status terbagi menjadi: `AVAILABLE` (Kosong), `OCCUPIED` (Terisi), dan `UNKNOWN` (Kamera tertutup / tidak ada deteksi valid).
-- 📊 **Live On-Screen Analytics Dashboard:** Menampilkan ringkasan total kursi, kursi terisi, kursi kosong, dan status sistem secara langsung di layar.
-- 🛠️ **Interactive Debug Mode:** Tekan tombol **`D`** untuk menampilkan garis asosiasi orang-ke-kursi, ID deteksi, dan skor kalkulasi.
-- 🧪 **Unit-Tested Logic (`test_occupancy.py`):** Dilengkapi 9 skenario unit test untuk menguji stabilitas algoritma matching pada berbagai geometri sintetis dan skenario oklusi.
+- **Live On-Screen Analytics Dashboard:** Menampilkan ringkasan total kursi, kursi terisi, kursi kosong, dan status sistem secara langsung di layar.
+- **Interactive Debug Mode:** Tekan tombol **`D`** untuk menampilkan garis asosiasi orang-ke-kursi, ID deteksi, dan skor kalkulasi.
+- **Unit-Tested Logic (`test_occupancy.py`):** Dilengkapi 9 skenario unit test untuk menguji stabilitas algoritma matching pada berbagai geometri sintetis dan skenario oklusi.
 
 ---
 
-## 🏗️ Cara Kerja Sistem (Pipeline)
+## Cara Kerja Sistem (Pipeline)
 
 ```mermaid
 flowchart LR
@@ -71,7 +71,7 @@ flowchart LR
 
 ---
 
-## 📁 Struktur Direktori
+## Struktur Direktori
 
 ```text
 cafe-seat-occupancy-detection/
@@ -89,7 +89,7 @@ cafe-seat-occupancy-detection/
 
 ---
 
-## 🚀 Cara Menjalankan (Quick Start)
+## Cara Menjalankan (Quick Start)
 
 ### 1. Prasyarat
 - Python 3.10 atau versi lebih baru
@@ -141,7 +141,7 @@ python -m unittest test_occupancy.py
 
 ---
 
-## ⚙️ Parameter Konfigurasi
+## Parameter Konfigurasi
 
 Semua threshold dapat disesuaikan pada `MatchingConfig` di [`occupancy.py`](occupancy.py):
 
@@ -156,7 +156,7 @@ Semua threshold dapat disesuaikan pada `MatchingConfig` di [`occupancy.py`](occu
 
 ---
 
-## 🚧 Keterbatasan Saat Ini & Rencana Pengembangan (Roadmap)
+## Keterbatasan Saat Ini & Rencana Pengembangan (Roadmap)
 
 Karena proyek ini merupakan proyek pembelajaran, berikut adalah evaluasi dan hal-hal yang dapat dikembangkan lebih lanjut:
 
@@ -167,17 +167,17 @@ Karena proyek ini merupakan proyek pembelajaran, berikut adalah evaluasi dan hal
 
 ---
 
-## 🤝 Kontribusi & Saran
+## Kontribusi & Saran
 
 Masukan dan saran sangat diapresiasi! Jika Anda memiliki ide perbaikan algoritma, perbaikan bug, atau ingin menambahkan fitur:
 1. Fork repositori ini
-2. Buat branch fitur baru (`git checkout -b feature/FiturKeren`)
-3. Commit perubahan Anda (`git commit -m 'Menambahkan fitur keren'`)
-4. Push ke branch (`git push origin feature/FiturKeren`)
+2. Buat branch fitur baru (`git checkout -b feature/nama-fitur`)
+3. Commit perubahan Anda (`git commit -m 'Menambahkan fitur baru'`)
+4. Push ke branch (`git push origin feature/nama-fitur`)
 5. Buka Pull Request
 
 ---
 
-## 📄 Lisensi
+## Lisensi
 
 Didistribusikan di bawah lisensi MIT. Silakan gunakan, pelajari, dan kembangkan untuk kebutuhan non-komersial maupun komersial.
