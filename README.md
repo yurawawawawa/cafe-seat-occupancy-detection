@@ -14,43 +14,43 @@
 
 ---
 
-## Catatan & Disclaimer (Project Pembelajaran)
+## Project Notes & Disclaimer (Learning Project)
 
-> *"Projek ini dibuat sebagai sarana eksplorasi dan pembelajaran Computer Vision & Deep Learning. Sistem ini masih jauh dari sempurna dan masih dalam tahap pengembangan aktif (Work in Progress).*  
-> *Masih terdapat beberapa edge-cases (misal: oklusi antar pengunjung, kursi yang digeser, atau sudut pandang kamera ekstrem) yang terus dipelajari untuk ditingkatkan ke depannya. Masukan, saran, dan diskusi sangat terbuka!"*
-
----
-
-## Latar Belakang (Overview)
-
-Mengetahui ketersediaan kursi di kafe atau restoran secara *real-time* biasanya memerlukan sensor fisik (IoT) pada setiap bangku yang mahal dan rumit perawatannya. 
-
-Proyek ini memanfaatkan kamera CCTV yang sudah ada dengan pendekatan Computer Vision berbasis software:
-1. Mengidentifikasi posisi pengunjung menggunakan model **YOLO11 Nano**.
-2. Memetakan area kursi tetap (*fixed seats*) secara interaktif menggunakan poligon.
-3. Menghubungkan setiap orang ke kursi terdekat dengan skor bobot geometris (*person-to-seat association*).
-4. Menerapkan **temporal state smoothing** untuk mencegah *flicker* (status berkedip-kedip) saat orang bergerak atau terhalang sejenak.
+> *"This project was developed as a hands-on exploration and learning journey in Computer Vision and Deep Learning. The system is still in active development (Work in Progress) and not yet production-perfect.*  
+> *There are known edge cases (e.g., severe inter-person occlusions, patrons moving chairs away from fixed positions, or extreme camera viewing angles) that are continuously being studied and improved. Feedback, suggestions, and discussions are very welcome!"*
 
 ---
 
-## Fitur Utama
+## Overview
 
-- **Deteksi Orang Real-Time:** Menggunakan YOLO11n yang ringan dan cepat untuk deteksi kelas `person` (COCO class 0).
-- **Interactive Seat Mapping Tool (`map_seats.py`):** Antarmuka visual untuk menandai poligon kursi secara manual pada frame CCTV, disimpan ke format `seats.json`.
+Monitoring seat availability in cafés and restaurants in real time traditionally requires dedicated hardware sensors (IoT) attached to each chair, which can be costly and difficult to maintain.
+
+This project leverages existing CCTV surveillance footage through a software-based Computer Vision pipeline:
+1. Detect patron positions using the lightweight **YOLO11 Nano** model.
+2. Interactively map fixed seating zones using custom polygons.
+3. Associate detected persons to seats using geometric scoring criteria (*person-to-seat association*).
+4. Apply **temporal state smoothing** to eliminate flickering caused by brief movements or momentary occlusions.
+
+---
+
+## Key Features
+
+- **Real-Time Person Detection:** Powered by YOLO11n for fast, low-latency detection of the `person` class (COCO class 0).
+- **Interactive Seat Mapping Tool (`map_seats.py`):** Visual GUI to manually annotate seat polygon boundaries directly on a CCTV frame, saved into `seats.json`.
 - **Smart Association Algorithm (`occupancy.py`):**
-  - Menggunakan titik referensi tubuh bagian bawah / pinggang (*lower-body reference*, ~65% tinggi bbox), bukan sekadar titik tengah atau kaki.
-  - Perhitungan multi-faktor: *point-in-polygon containment*, jarak ke centroid/anchor, serta confidence model.
-  - Penugasan 1-ke-1 (*one-to-one matching*) untuk mencegah satu orang menduduki dua kursi sekaligus.
+  - Uses a lower-body reference point (~65% of the bounding box height, representing hips/torso) rather than the center or feet.
+  - Multi-factor evaluation: point-in-polygon containment, proximity to seat centroid/anchor, and model confidence score.
+  - One-to-one matching to ensure a single person cannot occupy multiple seats at once.
 - **Temporal Smoothing & State Memory:**
-  - Menggunakan *rolling deque history* (default 8 frame) untuk memfilter fluktuasi deteksi sesaat (*false negative*).
-  - Status terbagi menjadi: `AVAILABLE` (Kosong), `OCCUPIED` (Terisi), dan `UNKNOWN` (Kamera tertutup / tidak ada deteksi valid).
-- **Live On-Screen Analytics Dashboard:** Menampilkan ringkasan total kursi, kursi terisi, kursi kosong, dan status sistem secara langsung di layar.
-- **Interactive Debug Mode:** Tekan tombol **`D`** untuk menampilkan garis asosiasi orang-ke-kursi, ID deteksi, dan skor kalkulasi.
-- **Unit-Tested Logic (`test_occupancy.py`):** Dilengkapi 9 skenario unit test untuk menguji stabilitas algoritma matching pada berbagai geometri sintetis dan skenario oklusi.
+  - Rolling deque history buffer (default 8 frames) to filter out temporary detection drops and false negatives.
+  - Robust 3-state system: `AVAILABLE` (Empty), `OCCUPIED` (Taken), and `UNKNOWN` (Camera occluded / insufficient evidence).
+- **Live On-Screen Analytics Dashboard:** Real-time HUD displaying total seats, occupied count, available count, and unknown count.
+- **Interactive Debug Mode:** Press **`D`** to visualize person-to-seat association lines, detection IDs, and match confidence scores.
+- **Unit-Tested Core Logic (`test_occupancy.py`):** Includes 9 comprehensive unit tests validating geometric matching, occlusion handling, and ambiguous states.
 
 ---
 
-## Cara Kerja Sistem (Pipeline)
+## System Pipeline
 
 ```mermaid
 flowchart LR
@@ -63,121 +63,121 @@ flowchart LR
     G --> H[Live HUD & Status Overlay]
 ```
 
-1. **Input:** Frame CCTV dibaca frame per frame.
-2. **Inference:** YOLO mendeteksi orang di dalam scene.
-3. **Geometry Calculation:** Mengambil koordinat lower-torso setiap orang dan mencocokkannya dengan poligon kursi di `seats.json`.
-4. **Debouncing:** Status kursi diakumulasi dalam antrean riwayat (*history buffer*). Status baru berubah jika bukti konsisten melewati ambang batas (`occupied_threshold` / `available_threshold`).
-5. **Render:** Hasil divisualisasikan dengan poligon warna (Hijau = Kosong, Merah = Terisi, Oranye = Unknown) beserta panel statistik.
+1. **Input:** CCTV video stream is read frame-by-frame.
+2. **Inference:** YOLO detects people in the scene.
+3. **Geometry Calculation:** Lower-torso coordinates are extracted and matched against seat polygons loaded from `seats.json`.
+4. **Debouncing:** Seat states are recorded into a temporal history queue. Status transitions only occur when evidence is consistent across frames (`occupied_threshold` / `available_threshold`).
+5. **Rendering:** Output is drawn with color-coded polygons (Green = Available, Red = Occupied, Orange = Unknown) alongside the live dashboard.
 
 ---
 
-## Struktur Direktori
+## Directory Structure
 
 ```text
 cafe-seat-occupancy-detection/
-├── main.py              # Script utama untuk menjalankan deteksi real-time & dashboard
-├── map_seats.py         # Tool GUI untuk memetakan koordinat poligon kursi
-├── occupancy.py         # Modul inti: kalkulasi geometri, matching, dan temporal smoothing
-├── test_occupancy.py    # Unit tests untuk modul occupancy
-├── seats.json           # Data koordinat poligon kursi (hasil mapping)
-├── yolo11n.pt           # Model weights YOLO11 Nano
-├── CCTV FOOTAGE.mp4     # Sampel rekaman CCTV kafe untuk demo
-├── frame_preview.jpg    # Preview visualisasi sistem
-├── requirements.txt     # Daftar dependensi Python
-└── README.md            # Dokumentasi proyek
+├── main.py              # Main script for real-time detection & dashboard overlay
+├── map_seats.py         # GUI tool to map and calibrate seat polygon coordinates
+├── occupancy.py         # Core module: geometry calculation, matching, and temporal smoothing
+├── test_occupancy.py    # Unit tests for the occupancy matching module
+├── seats.json           # Seat polygon coordinate data (mapping output)
+├── yolo11n.pt           # YOLO11 Nano model weights
+├── CCTV FOOTAGE.mp4     # Sample CCTV video footage for demo
+├── frame_preview.jpg    # Visual demonstration preview
+├── requirements.txt     # Python project dependencies
+└── README.md            # Project documentation
 ```
 
 ---
 
-## Cara Menjalankan (Quick Start)
+## Getting Started (Quick Start)
 
-### 1. Prasyarat
-- Python 3.10 atau versi lebih baru
+### 1. Prerequisites
+- Python 3.10 or higher
 - Git
 
-### 2. Kloning Repositori
+### 2. Clone Repository
 ```bash
 git clone https://github.com/yurawawawawa/cafe-seat-occupancy-detection.git
 cd cafe-seat-occupancy-detection
 ```
 
-### 3. Buat Virtual Environment & Pasang Dependensi
+### 3. Set Up Virtual Environment & Install Dependencies
 ```bash
-# Buat virtual environment
+# Create virtual environment
 python -m venv .venv
 
-# Aktifkan virtual environment
+# Activate virtual environment
 # Windows (PowerShell):
 .\.venv\Scripts\Activate.ps1
 # Linux / macOS:
 source .venv/bin/activate
 
-# Pasang dependensi
+# Install dependencies
 pip install -r requirements.txt
 ```
 
-### 4. (Opsional) Memetakan Kursi Baru
-Jika ingin menggunakan video CCTV Anda sendiri:
+### 4. (Optional) Map New Seats
+If you want to use your own CCTV video or camera feed:
 ```bash
 python map_seats.py
 ```
-- **Klik Kiri:** Menandai titik sudut kursi (minimal 3-4 titik).
-- **ENTER / SPASI:** Menyimpan poligon kursi saat ini.
-- **U:** Undo titik terakhir.
-- **R:** Reset titik yang sedang dibuat.
-- **Q / ESC:** Selesai dan menyimpan ke `seats.json`.
+- **Left Click:** Mark seat corner points (minimum 3-4 points per seat).
+- **ENTER / SPACE:** Save current seat polygon.
+- **U:** Undo the last placed point.
+- **R:** Reset points for the seat currently being drawn.
+- **Q / ESC:** Finish and save coordinates to `seats.json`.
 
-### 5. Jalankan Deteksi Okupansi
+### 5. Run Occupancy Detection
 ```bash
 python main.py
 ```
-- Tekan **`D`**: Menyalakan / mematikan mode **DEBUG** (garis relasi & skor).
-- Tekan **`Q`**: Keluar dari aplikasi.
+- Press **`D`**: Toggle **DEBUG** mode (shows association vectors and scores).
+- Press **`Q`**: Quit the application.
 
-### 6. Menjalankan Unit Tests
+### 6. Run Unit Tests
 ```bash
 python -m unittest test_occupancy.py
 ```
 
 ---
 
-## Parameter Konfigurasi
+## Configuration Parameters
 
-Semua threshold dapat disesuaikan pada `MatchingConfig` di [`occupancy.py`](occupancy.py):
+All thresholds can be adjusted via `MatchingConfig` in [`occupancy.py`](occupancy.py):
 
-| Parameter | Default | Deskripsi |
-|-----------|---------|-----------|
-| `min_match_score` | `0.50` | Skor minimal agar orang dianggap menduduki kursi |
-| `ambiguity_score` | `0.35` | Ambang batas potensi ambigu (mencegah salah deteksi) |
-| `reliable_detection_conf` | `0.25` | Minimal confidence YOLO agar orang dianggap valid |
-| `history_size` | `8` | Ukuran buffer temporal frame untuk smoothing |
-| `occupied_threshold` | `0.60` | Rasio frame terdeteksi untuk menyatakan kursi `OCCUPIED` |
-| `available_threshold` | `0.20` | Rasio frame kosong untuk menyatakan kursi `AVAILABLE` |
-
----
-
-## Keterbatasan Saat Ini & Rencana Pengembangan (Roadmap)
-
-Karena proyek ini merupakan proyek pembelajaran, berikut adalah evaluasi dan hal-hal yang dapat dikembangkan lebih lanjut:
-
-- [ ] **Dynamic Seat Displacement:** Saat ini poligon kursi bersifat statis (*fixed*). Jika pengunjung menggeser kursi terlalu jauh, akurasi akan menurun.
-- [ ] **Severe Occlusion:** Pada sudut kamera yang terlalu datar (*low-angle*), pengunjung yang berdiri di depan kursi berpotensi salah dihubungkan dengan kursi di belakangnya.
-- [ ] **Multi-Camera Support:** Mengintegrasikan beberapa sudut pandang kamera untuk mencakup seluruh area kafe tanpa *blind spot*.
-- [ ] **Web Dashboard / IoT Integration:** Menyediakan REST API / Webhook (FastAPI/Flask) atau bot Telegram agar pelanggan kafe bisa mengecek ketersediaan kursi dari rumah.
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `min_match_score` | `0.50` | Minimum score required to assign a person to a seat |
+| `ambiguity_score` | `0.35` | Score threshold above which a candidate match is considered ambiguous |
+| `reliable_detection_conf` | `0.25` | Minimum confidence score for a YOLO detection to be considered reliable |
+| `history_size` | `8` | Size of temporal rolling deque buffer used for smoothing |
+| `occupied_threshold` | `0.60` | Proportion of positive frames in buffer required to classify a seat as `OCCUPIED` |
+| `available_threshold` | `0.20` | Proportion of negative frames in buffer required to classify a seat as `AVAILABLE` |
 
 ---
 
-## Kontribusi & Saran
+## Current Limitations & Roadmap
 
-Masukan dan saran sangat diapresiasi! Jika Anda memiliki ide perbaikan algoritma, perbaikan bug, atau ingin menambahkan fitur:
-1. Fork repositori ini
-2. Buat branch fitur baru (`git checkout -b feature/nama-fitur`)
-3. Commit perubahan Anda (`git commit -m 'Menambahkan fitur baru'`)
-4. Push ke branch (`git push origin feature/nama-fitur`)
-5. Buka Pull Request
+As this is an exploratory learning project, several limitations exist and provide directions for future iterations:
+
+- [ ] **Dynamic Seat Displacement:** Currently assumes static/fixed seats. If patrons move chairs significantly, accuracy degrades.
+- [ ] **Severe Occlusion:** Low camera angles can lead to misassociation when a standing patron occludes a seated person behind them.
+- [ ] **Multi-Camera Support:** Fusing multiple camera perspectives to cover blind spots across the venue.
+- [ ] **Web Dashboard / IoT Integration:** Exposing seat availability via REST API / Webhooks (FastAPI/Flask) or a Telegram bot for public customer access.
 
 ---
 
-## Lisensi
+## Contributing & Feedback
 
-Didistribusikan di bawah lisensi MIT. Silakan gunakan, pelajari, dan kembangkan untuk kebutuhan non-komersial maupun komersial.
+Feedback and suggestions are highly appreciated! To contribute:
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/your-feature-name`)
+3. Commit your changes (`git commit -m 'Add some feature'`)
+4. Push to the branch (`git push origin feature/your-feature-name`)
+5. Open a Pull Request
+
+---
+
+## License
+
+Distributed under the MIT License. Feel free to use, study, and build upon this project for educational and commercial purposes.
